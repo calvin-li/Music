@@ -1,5 +1,6 @@
 import os
 import mutagen.id3
+from hanziconv import HanziConv as conv
 
 
 def isascii(string):
@@ -21,8 +22,13 @@ def set_artist(song, artists):
     song.save()
 
 
+def set_comment(song, comment):
+    song.add(mutagen.id3.COMM(mutagen=3, text=comment))
+    song.save()
+
+
 def rename_mp3(src, dst):
-    os.rename(src, dst + ".mp3")
+    os.rename(src, dst.strip().replace(".mp3", "") + ".mp3")
 
 
 tags = {
@@ -32,7 +38,8 @@ tags = {
     "Genre": "TCON",
     "Artist": "TPE1",
     "Artist2": "TPE2",
-    "Year": "TDRC"
+    "Year": "TDRC",
+    "Comments": "COMM::XXX"
 }
 
 
@@ -41,40 +48,13 @@ def main():
 
     songs = []
     for name in song_names:
-        songs.append(mutagen.id3.ID3(name))
-        if name.__contains__('-'):
-            spl = name.split('-')
-            title_from_file = spl[0].strip()
-            artist_from_file = spl[1].strip().strip(".mp3")
-            title_from_song = str(songs[-1][tags["Title"]])
-            artist_from_song = str(songs[-1][tags["Artist"]])
+        song = mutagen.id3.ID3(name)
+        songs.append(song)
 
-            if title_from_file != title_from_song:
-                choice = input("Title mismatch: " + title_from_file + ", " + title_from_song + ": ")
-                if choice == '1':
-                    set_title(songs[-1], title_from_file)
-                elif choice == '2':
-                    rename_mp3(name, title_from_song)
-                else:
-                    set_title(songs[-1], choice)
-                    rename_mp3(songs[-1], choice)
-
-            if artist_from_file != artist_from_song:
-                choice = input("Artist mismatch: " + artist_from_file + ", " + artist_from_song + ": ")
-                if choice == '1':
-                    set_artist(songs[-1], artist_from_file)
-                elif choice == '2':
-                    rename_mp3(name, title_from_file)
-                else:
-                    set_artist(songs[-1], choice)
-
-        # try:
-        #     title = songs[-1][tags["title"]]
-        # except KeyError:
-        #     print("\t" + name)
-        #     mutagen.id3.TIT2()
-        #     songs[-1].add(mutagen.id3.TIT2(mutagen=3, text=name))
-        #     songs[-1].save()
+        title = str(song[tags["Title"]])
+        artist = str(song[tags["Artist"]])
+        is_dupe = tags["Comments"] in song and str(song[tags["Comments"]]) == "duplicate"
+        print(is_dupe)
 
 
 main()
