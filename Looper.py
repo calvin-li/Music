@@ -1,6 +1,6 @@
 import os
 import mutagen.id3
-from hanziconv import HanziConv as conv
+import re
 
 
 def isascii(string):
@@ -53,8 +53,11 @@ def main():
 
         title = str(song[tags["Title"]])
         artist = str(song[tags["Artist"]])
-        is_dupe = tags["Comments"] in song and str(song[tags["Comments"]]) == "duplicate"
-        print(is_dupe)
+
+        if title.__contains__("齣頭天"):
+            title = "出頭天"
+            set_title(song, title)
+            rename_mp3(name, title + " - " + artist)
 
 
 main()
